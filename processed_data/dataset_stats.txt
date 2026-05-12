@@ -1,0 +1,53 @@
+=== Sanskrit NLP Dataset Statistics ===
+
+SANDHI
+  Total  : 5180
+  Train  : 4144
+  Val    : 518
+  Test   : 518
+
+POS TAGGING
+  Real sentences       : 29
+  Synthetic sentences  : 889
+  Total                : 918
+  Train  : 734
+  Val    : 92
+  Test   : 92
+
+COMBINED (Multitask)
+  Train  : 4878
+  Val    : 610
+  Test   : 610
+
+=== Sample Sandhi rows ===
+  IN : segment: तत्रानुमित्यप्रतिबन्धात्
+  OUT: तत्र अनुमित्यप्रतिबन्धात्
+
+  IN : segment: केवलमीश्वरः
+  OUT: केवलम् ईश्वरः
+
+  IN : segment: नासम्भवः
+  OUT: न असम्भवः
+
+  IN : segment: ग्रहगणचरितं वा
+  OUT: ग्रहगणचरितम् वा
+
+  IN : segment: विचित्रवीर्यो विषयी
+  OUT: विचित्रवीर्यः विषयी
+
+=== Sample POS rows ===
+  IN : tag: एतत् धर्मक्षेत्रे वदति ।
+  OUT: एतत्|PRON धर्मक्षेत्रे|NOUN वदति|VERB ।|SYM
+
+  IN : tag: कापि भवति ।
+  OUT: कापि|PRON भवति|VERB ।|SYM
+
+  IN : tag: मन्त्री समवेता आसीत् ।
+  OUT: मन्त्री|NOUN समवेता|ADJ आसीत्|VERB ।|SYM
+
+  IN : tag: तस्मै अस्ति ।
+  OUT: तस्मै|PRON अस्ति|VERB ।|SYM
+
+  IN : tag: वयम् पुस्तकम् भवति ।
+  OUT: वयम्|PRON पुस्तकम्|NOUN भवति|VERB ।|SYM
+
