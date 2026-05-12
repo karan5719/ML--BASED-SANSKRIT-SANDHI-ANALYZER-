@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanskrit text tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --bg: #141312;
+  --bg-elev: #1a1917;
+  --surface: #201f1c;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text: #ece8e1;
+  --text-soft: #b8b3a8;
+  --muted: #8a8578;
+  --accent: #c4a574;
+  --accent-dim: rgba(196, 165, 116, 0.22);
+  --link: #a8c4e8;
+  --danger: #d97066;
+  --r: 6px;
+  --rs: 4px;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --serif: "Crimson Pro", "Noto Serif Devanagari", Georgia, serif;
+  --sans: "Source Sans 3", system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 400;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+/* Header */
+.site-header {
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+.site-kicker {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.site-title {
+  font-family: var(--serif);
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.site-lede {
+  font-size: 1rem;
+  color: var(--text-soft);
+  max-width: 42em;
+  line-height: 1.55;
+}
+
+/* Inputs */
+.input-grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (min-width: 860px) {
+  .input-grid { grid-template-columns: 1fr 1fr; align-items: stretch; }
+}
+.input-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 18px 16px;
+}
+.input-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 10px;
+}
+textarea#sk,
+textarea#joinParts {
+  width: 100%;
+  min-height: 100px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  line-height: 1.65;
+  padding: 12px 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+textarea#joinParts { min-height: 88px; font-size: 1.15rem; }
+textarea#sk:focus,
+textarea#joinParts:focus {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--accent-dim);
+}
+textarea#sk::placeholder,
+textarea#joinParts::placeholder {
+  color: var(--muted);
+  opacity: 0.85;
+}
+.sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.sample-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text-soft);
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.sample-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.join-result {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  line-height: 1.45;
+  padding: 16px 18px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+.join-steps { display: flex; flex-direction: column; gap: 8px; }
+.join-step {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 10px 12px;
+  color: var(--text);
+  line-height: 1.45;
+}
+.join-step .jr-rule {
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 0.6875rem;
+}
+
+/* Toolbar */
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--rs);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.btn:active { opacity: 0.92; }
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #1a1714;
+  border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #d4b68a;
+  border-color: #d4b68a;
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.btn-quiet {
+  background: transparent;
+  color: var(--link);
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.btn-quiet:hover:not(:disabled) {
+  color: #c5daf5;
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(72px);
+  background: #3d2420;
+  color: #f5e8e6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--rs);
+  padding: 11px 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  max-width: min(420px, 92vw);
+  text-align: center;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Tabs */
+.tabs { display: none; }
+.tabs.visible { display: block; }
+.tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+}
+.tab-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 10px 14px 12px;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tab-btn:hover:not(.active) {
+  color: var(--text-soft);
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Stats */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 14px 12px;
+  text-align: left;
+}
+.stat-val {
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.stat-lbl {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Word cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.word-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 14px 14px 12px;
+  transition: border-color 0.15s;
+}
+.word-card:hover {
+  border-color: var(--border-strong);
+}
+.wc-word {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+.pos-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--rs);
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+}
+.wc-conf {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+.wc-conf b { color: var(--text-soft); font-weight: 600; }
+
+/* POS tags — muted, legible */
+.p-noun   { background: rgba(140, 160, 130, 0.12); color: #b8c9ae; border-color: rgba(140, 160, 130, 0.25); }
+.p-verb   { background: rgba(180, 120, 115, 0.12); color: #d4a9a5; border-color: rgba(180, 120, 115, 0.25); }
+.p-pron   { background: rgba(130, 145, 175, 0.12); color: #aeb8cc; border-color: rgba(130, 145, 175, 0.25); }
+.p-adj    { background: rgba(175, 150, 110, 0.12); color: #d4c4a3; border-color: rgba(175, 150, 110, 0.25); }
+.p-adv    { background: rgba(165, 150, 125, 0.12); color: #ccc0ad; border-color: rgba(165, 150, 125, 0.25); }
+.p-part   { background: rgba(150, 130, 165, 0.12); color: #c4b8cc; border-color: rgba(150, 130, 165, 0.25); }
+.p-conj   { background: rgba(165, 130, 150, 0.12); color: #ccb0bc; border-color: rgba(165, 130, 150, 0.25); }
+.p-other  { background: rgba(255, 255, 255, 0.04); color: var(--muted); border-color: var(--border); }
+
+/* Sandhi */
+.sandhi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.sandhi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 16px 16px 14px;
+  transition: border-color 0.15s;
+}
+.sandhi-card:hover {
+  border-color: var(--border-strong);
+}
+.sc-original {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+}
+.sc-arrow {
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 6px;
+}
+.sc-split {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--text-soft);
+}
+.sc-split .plus {
+  color: var(--muted);
+  margin: 0 5px;
+  font-family: var(--sans);
+  font-size: 0.85em;
+}
+.sc-meta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sc-method {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 2px 8px;
+}
+.sc-conf {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+/* AI */
+.ai-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 680px) {
+  .ai-grid { grid-template-columns: 1fr; }
+}
+.ai-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 18px 16px;
+}
+.ai-block-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.ai-block.ai-accent .ai-block-title {
+  color: var(--text-soft);
+}
+.ai-translation {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.ai-source {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+.ai-explanation {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--text-soft);
+}
+.word-meaning-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wm-item {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 5px 10px;
+  font-size: 0.8125rem;
+}
+.wm-item span { color: var(--muted); margin: 0 4px; }
+.steps-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.step-chip {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 3px 9px;
+}
+.step-arrow {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* Translate */
+.lang-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.lang-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.lang-check:has(input:checked) {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+.lang-check input {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.lang-name { font-size: 0.8125rem; font-weight: 500; }
+.lang-flag { font-size: 1rem; opacity: 0.9; }
+.translation-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.tr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 14px;
+  transition: border-color 0.15s;
+}
+.tr-card:hover {
+  border-color: var(--border-strong);
+}
+.tr-lang {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.tr-text {
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+.tr-card.tr-error .tr-text {
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+.translate-actions {
+  margin-bottom: 20px;
+}
+
+/* Utility */
+.loading-state {
+  text-align: center;
+  padding: 48px 16px;
+}
+.loader-ring {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loading-state p {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+.empty-state .es-icon {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+.empty-state p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.conf-bar-wrap { margin-top: 8px; }
+.conf-bar-track {
+  background: var(--bg-elev);
+  border-radius: 100px;
+  height: 3px;
+  overflow: hidden;
+}
+.conf-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: width 0.45s ease;
+}
+
+.btn:focus-visible,
+.tab-btn:focus-visible,
+.sample-btn:focus-visible,
+textarea#sk:focus-visible,
+textarea#joinParts:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+textarea#sk:focus,
+textarea#joinParts:focus {
+  outline: none;
+}
+  </style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="wrap">
+
+  <header class="site-header">
+    <p class="site-kicker">Local pipeline</p>
+    <h1 class="site-title">Sanskrit text analysis</h1>
+    <p class="site-lede">POS tagging and sandhi splitting on Devanagari input, optional rule-based sandhi join, AI gloss via Groq when configured, and quick translation.</p>
+  </header>
+
+  <div class="input-grid">
+    <div class="input-card">
+      <div class="input-label">Main text</div>
+      <textarea id="sk" placeholder="अहं गच्छामि …" spellcheck="false"></textarea>
+      <div class="sample-row">
+        <button type="button" class="sample-btn" onclick="setSample('रामः सीतां पश्यति')">रामः सीतां पश्यति</button>
+        <button type="button" class="sample-btn" onclick="setSample('अहं गच्छामि')">अहं गच्छामि</button>
+        <button type="button" class="sample-btn" onclick="setSample('विद्या विनयेन शोभते')">विद्या विनयेन शोभते</button>
+        <button type="button" class="sample-btn" onclick="setSample('देवाः पुण्यं ददति')">देवाः पुण्यं ददति</button>
+      </div>
+    </div>
+    <div class="input-card">
+      <div class="input-label">Sandhi join (morphemes, spaces or +)</div>
+      <textarea id="joinParts" placeholder="तथा अपि · तत्+रूप" spellcheck="false"></textarea>
+      <div class="sample-row">
+        <button type="button" class="sample-btn" onclick="setJoinSample('तथा अपि')">तथा अपि</button>
+        <button type="button" class="sample-btn" onclick="setJoinSample('तत्+रूप')">तत्+रूप</button>
+        <button type="button" class="sample-btn" onclick="setJoinSample('प्र आप्त')">प्र आप्त</button>
+        <button type="button" class="sample-btn" onclick="setJoinSample('सु आगत')">सु आगत</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <button type="button" class="btn btn-primary" id="btnAnalyse" onclick="runAnalyse()">Analyse text</button>
+    <button type="button" class="btn btn-secondary" id="btnAI" onclick="runAI()">AI shloka</button>
+    <button type="button" class="btn btn-secondary" id="btnLangShow" onclick="showLangTab()">Translate</button>
+    <button type="button" class="btn btn-secondary" id="btnJoinSandhi" onclick="runJoinSandhi()">Join sandhi</button>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab-nav">
+      <button type="button" class="tab-btn" data-tab="pos" onclick="switchTab('pos')">POS</button>
+      <button type="button" class="tab-btn" data-tab="sandhi" onclick="switchTab('sandhi')">Sandhi splits</button>
+      <button type="button" class="tab-btn" data-tab="ai" onclick="switchTab('ai')">AI gloss</button>
+      <button type="button" class="tab-btn" data-tab="translate" onclick="switchTab('translate')">Translate</button>
+      <button type="button" class="tab-btn" data-tab="join" onclick="switchTab('join')">Join result</button>
+    </div>
+
+    <!-- POS -->
+    <div class="tab-pane" id="tab-pos">
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val" id="stTokens">—</div><div class="stat-lbl">Tokens</div></div>
+        <div class="stat"><div class="stat-val" id="stPos">—</div><div class="stat-lbl">POS Tags</div></div>
+        <div class="stat"><div class="stat-val" id="stConf">—</div><div class="stat-lbl">Confidence</div></div>
+        <div class="stat"><div class="stat-val" id="stSandhi">—</div><div class="stat-lbl">Splits</div></div>
+      </div>
+      <div class="section-label">Tagged tokens</div>
+      <div class="cards-grid" id="posGrid"></div>
+    </div>
+
+    <!-- SANDHI -->
+    <div class="tab-pane" id="tab-sandhi">
+      <div class="section-label">Sandhi splits</div>
+      <div class="sandhi-cards-grid" id="sandhiGrid"></div>
+    </div>
+
+    <!-- AI -->
+    <div class="tab-pane" id="tab-ai">
+      <div id="aiContent"></div>
+    </div>
+
+    <!-- TRANSLATE -->
+    <div class="tab-pane" id="tab-translate">
+      <div class="section-label">Target Languages</div>
+      <div class="lang-checkboxes" id="langChoices">
+        <label class="lang-check"><input type="checkbox" value="en" checked /><span class="lang-flag">🇬🇧</span><span class="lang-name">English</span></label>
+        <label class="lang-check"><input type="checkbox" value="hi" checked /><span class="lang-flag">🇮🇳</span><span class="lang-name">Hindi</span></label>
+        <label class="lang-check"><input type="checkbox" value="te" /><span class="lang-flag">🇮🇳</span><span class="lang-name">Telugu</span></label>
+        <label class="lang-check"><input type="checkbox" value="ta" /><span class="lang-flag">🇮🇳</span><span class="lang-name">Tamil</span></label>
+        <label class="lang-check"><input type="checkbox" value="kn" /><span class="lang-flag">🇮🇳</span><span class="lang-name">Kannada</span></label>
+        <label class="lang-check"><input type="checkbox" value="ml" /><span class="lang-flag">🇮🇳</span><span class="lang-name">Malayalam</span></label>
+        <label class="lang-check"><input type="checkbox" value="bn" /><span class="lang-flag">🇧🇩</span><span class="lang-name">Bengali</span></label>
+      </div>
+      <div class="translate-actions">
+        <button type="button" class="btn btn-primary" onclick="runTranslate()" id="btnTranslateGo">Run translation</button>
+      </div>
+      <div class="section-label">Results</div>
+      <div class="translation-results" id="translateGrid"></div>
+    </div>
+
+    <!-- JOIN SANDHI -->
+    <div class="tab-pane" id="tab-join">
+      <div class="section-label">Joined string</div>
+      <div class="join-result" id="joinCombined">—</div>
+      <div class="section-label">Steps</div>
+      <div class="join-steps" id="joinSteps"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function setSample(t){$('sk').value=t;$('sk').focus()}
+function setJoinSample(t){$('joinParts').value=t;$('joinParts').focus()}
+function toast(msg){const e=$('toast');e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3200)}
+function setLoading(id,on){const b=$(id);if(!b)return;b.disabled=on;if(on)b.dataset.orig=b.innerHTML;else b.innerHTML=b.dataset.orig||b.innerHTML}
+function getText(){const t=$('sk').value.trim();if(!t){toast('Please enter some Sanskrit text first.');return null}return t}
+function showTabs(name){$('tabs').classList.add('visible');switchTab(name)}
+function switchTab(name){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name))}
+const tagMap={NOUN:'p-noun',NOUN_PROP:'p-noun',VERB:'p-verb',PRON:'p-pron',PRON_DEM:'p-pron',PRON_INT:'p-pron',PRON_PER:'p-pron',ADJ:'p-adj',ADV:'p-adv',PART:'p-part',PART_PARTICIPLE:'p-part',CONJ:'p-conj'};
+function posClass(t){return tagMap[t]||'p-other'}
+function confBar(v){return`<div class="conf-bar-wrap"><div class="conf-bar-track"><div class="conf-bar-fill" style="width:${Math.round(v*100)}%"></div></div></div>`}
+function loadHTML(m='Analysing…'){return`<div class="loading-state"><div class="loader-ring"></div><p>${m}</p></div>`}
+function emptyHTML(t,d=''){return`<div class="empty-state"><div class="es-icon">○</div><p><b>${t}</b>${d?`<br><small>${esc(d)}</small>`:''}</p></div>`}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+async function runAnalyse(){
+  const text=getText();if(!text)return;
+  setLoading('btnAnalyse',true);showTabs('pos');
+  $('posGrid').innerHTML=loadHTML();$('sandhiGrid').innerHTML=loadHTML();
+  ['stTokens','stPos','stConf','stSandhi'].forEach(id=>$(id).textContent='—');
+  try{
+    const fd=new FormData();fd.append('sanskrit_text',text);
+    const r=await(await fetch('/process',{method:'POST',body:fd})).json();
+    if(!r.success){toast(r.error||'Processing failed.');$('posGrid').innerHTML=emptyHTML('Analysis failed',r.error);return}
+    const d=r.results;
+    const tokens=d.tokens||[],splits=(d.sandhi_operations||[]).filter(o=>o.split&&o.split.length>1).length;
+    $('stTokens').textContent=tokens.length;
+    $('stPos').textContent=new Set(tokens.map(t=>t[1])).size;
+    $('stConf').textContent=(d.confidence?Math.round(d.confidence*100):0)+'%';
+    $('stSandhi').textContent=splits;
+    const valid=tokens.filter(t=>t[1]!=='UNK'&&t[1]!=='UNKNOWN');
+    $('posGrid').innerHTML=valid.length?valid.map(([w,tag,c=.95])=>`<div class="word-card"><div class="wc-word">${w}</div><div class="pos-pill ${posClass(tag)}">${tag}</div><div class="wc-conf">Confidence: <b>${(c*100).toFixed(1)}%</b></div>${confBar(c)}</div>`).join(''):emptyHTML('No POS tags','No valid tagged tokens returned.');
+    const ops=(d.sandhi_operations||[]).filter(o=>(o.method||'').toLowerCase()!=='edge_case');
+    $('sandhiGrid').innerHTML=ops.length?ops.map(op=>{const c=op.confidence||.95;const sp=op.split&&op.split.length>1;return`<div class="sandhi-card"><div class="sc-original">${op.original}</div><div class="sc-arrow">▾ split into</div><div class="sc-split">${sp?op.split.map((p,i)=>i===0?`<span>${p}</span>`:`<span class="plus">+</span><span>${p}</span>`).join(''):'<span style="color:var(--muted)">No split</span>'}</div><div class="sc-meta"><span class="sc-method">${op.method||'NONE'}</span><span class="sc-conf">${(c*100).toFixed(1)}%</span></div></div>`}).join(''):emptyHTML('No sandhi operations','No sandhi splits were detected.');
+  }catch(e){toast('Network error: '+e.message);$('posGrid').innerHTML=emptyHTML('Network error',e.message)}
+  finally{setLoading('btnAnalyse',false)}
+}
+
+async function runAI(){
+  const text=getText();if(!text)return;
+  setLoading('btnAI',true);showTabs('ai');
+  $('aiContent').innerHTML=loadHTML('Consulting AI scholar…');
+  try{
+    const fd=new FormData();fd.append('sanskrit_text',text);
+    const r=await(await fetch('/analyze_shloka',{method:'POST',body:fd})).json();
+    if(!r.success){$('aiContent').innerHTML=emptyHTML('AI Analysis failed',r.error);return}
+    const g=r.results.groq_analysis||{},nlp=r.results.nlp_analysis||{},steps=r.results.processing_steps||[];
+    const pos=((nlp.pos_analysis||{}).tagged_tokens||[]).filter(t=>t[1]!=='UNK');
+    const wms=(g.word_meanings||'').split(',').map(s=>{const i=s.indexOf('=');return i<0?null:[s.slice(0,i).trim(),s.slice(i+1).trim()]}).filter(Boolean);
+    $('aiContent').innerHTML=`
+      <div class="ai-grid">
+        <div class="ai-block"><div class="ai-block-title">Translation</div><div class="ai-translation">${esc(g.translation||'—')}</div><div class="ai-source">Source: ${esc(g.source||'Unknown')}</div></div>
+        <div class="ai-block ai-accent"><div class="ai-block-title">Explanation</div><div class="ai-explanation">${esc(g.explanation||'—')}</div></div>
+      </div>
+      ${wms.length?`<div class="ai-block" style="margin-bottom:16px"><div class="ai-block-title">Word Meanings</div><ul class="word-meaning-list">${wms.map(([w,m])=>`<li class="wm-item"><b>${esc(w)}</b><span>=</span>${esc(m)}</li>`).join('')}</ul></div>`:''}
+      ${pos.length?`<div class="section-label" style="margin-top:8px">POS Tags from NLP</div><div class="cards-grid" style="margin-bottom:16px">${pos.map(([w,tag,c=.95])=>`<div class="word-card"><div class="wc-word">${w}</div><div class="pos-pill ${posClass(tag)}">${tag}</div><div class="wc-conf"><b>${(c*100).toFixed(1)}%</b></div></div>`).join('')}</div>`:''}
+      ${steps.length?`<div class="steps-bar">${steps.map((s,i)=>`${i>0?'<span class="step-arrow">→</span>':''}<span class="step-chip">${s}</span>`).join('')}</div>`:''}
+    `;
+  }catch(e){$('aiContent').innerHTML=emptyHTML('Network error',e.message);toast('Network error: '+e.message)}
+  finally{setLoading('btnAI',false)}
+}
+
+function showLangTab(){showTabs('translate')}
+
+async function runJoinSandhi(){
+  const raw=$('joinParts').value.trim();
+  if(!raw){toast('Enter morphemes to join (space or +).');return}
+  setLoading('btnJoinSandhi',true);showTabs('join');
+  $('joinCombined').textContent='…';$('joinSteps').innerHTML=loadHTML('Applying rules…');
+  try{
+    const fd=new FormData();fd.append('parts_text',raw);
+    const r=await(await fetch('/join_sandhi',{method:'POST',body:fd})).json();
+    if(!r.success){toast(r.error||'Join failed.');$('joinCombined').textContent='—';$('joinSteps').innerHTML=emptyHTML('Could not join',r.error);return}
+    const d=r.results||{};
+    $('joinCombined').textContent=d.combined||'—';
+    const steps=d.steps||[];
+    $('joinSteps').innerHTML=steps.length?steps.map(s=>{
+      const rule=s.rule?`<div class="jr-rule">Rule: ${esc(s.rule)}</div>`:'<div class="jr-rule">No table rule — concatenation</div>';
+      return`<div class="join-step"><span>${esc(s.left)}</span> + <span>${esc(s.right)}</span> → <span>${esc(s.output)}</span>${rule}</div>`;
+    }).join(''):'<div class="empty-state" style="padding:20px"><p>No intermediate steps (single piece after normalisation).</p></div>';
+  }catch(e){toast('Network error: '+e.message);$('joinSteps').innerHTML=emptyHTML('Network error',e.message)}
+  finally{setLoading('btnJoinSandhi',false)}
+}
+
+async function runTranslate(){
+  const text=getText();if(!text)return;
+  const codes=[...document.querySelectorAll('#langChoices input:checked')].map(i=>i.value);
+  if(!codes.length){toast('Please select at least one language.');return}
+  setLoading('btnTranslateGo',true);$('translateGrid').innerHTML=loadHTML('Translating…');
+  try{
+    const fd=new FormData();fd.append('sanskrit_text',text);codes.forEach(c=>fd.append('languages',c));
+    const r=await(await fetch('/translate',{method:'POST',body:fd})).json();
+    if(!r.success){$('translateGrid').innerHTML=emptyHTML('Translation failed',r.error);return}
+    const names={en:'English',hi:'Hindi',te:'Telugu',ta:'Tamil',kn:'Kannada',ml:'Malayalam',bn:'Bengali'};
+    const flags={en:'🇬🇧',hi:'🇮🇳',te:'🇮🇳',ta:'🇮🇳',kn:'🇮🇳',ml:'🇮🇳',bn:'🇧🇩'};
+    const trans=r.results.translations||{};
+    $('translateGrid').innerHTML=Object.entries(trans).map(([code,txt])=>{const err=txt&&txt.toLowerCase().startsWith('translation error');return`<div class="tr-card${err?' tr-error':''}"><div class="tr-lang">${flags[code]||'🌐'} ${names[code]||code}</div><div class="tr-text">${esc(txt)}</div></div>`}).join('');
+  }catch(e){$('translateGrid').innerHTML=emptyHTML('Network error',e.message);toast('Network error: '+e.message)}
+  finally{setLoading('btnTranslateGo',false)}
+}
+</script>
+</body>
+</html>
