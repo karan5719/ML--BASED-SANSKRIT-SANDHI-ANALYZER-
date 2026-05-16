@@ -1,10 +1,11 @@
 ---
-title: Sanskrit POS Tagger & Sandhi Splitter
+title: Sanskrit NLP Pipeline
 emoji: 🕉️
 colorFrom: blue
 colorTo: green
 sdk: gradio
 sdk_version: 4.0.0
+python_version: "3.12"
 app_file: app.py
 pinned: false
 license: mit
@@ -12,50 +13,135 @@ license: mit
 
 # Sanskrit NLP Pipeline
 
-This is a comprehensive Sanskrit Natural Language Processing pipeline that combines Part-of-Speech (POS) tagging and Sandhi splitting capabilities.
+A practical Sanskrit NLP toolkit for **sandhi splitting**, **POS tagging**, **reverse sandhi join**, optional **AI śloka analysis**, and optional **multi-language translation**.
+
+This repository supports two UI modes:
+- `app.py` → Gradio interface for Hugging Face Spaces or local demo
+- `simple_app.py` → Flask web app with custom HTML frontend
 
 ## Features
 
-- **POS Tagging**: Uses Conditional Random Fields (CRF) to tag Sanskrit words with their grammatical categories
-- **Sandhi Splitting**: Employs a hybrid BiLSTM model to split compound words formed by Sanskrit sandhi rules
-- **Integrated Processing**: Combines both analyses for complete Sanskrit text understanding
+- **Devanagari tokenization** for Sanskrit text
+- **Hybrid sandhi splitting** using BiLSTM + rule-based refinement
+- **CRF-based POS tagging** after sandhi processing
+- **Reverse sandhi join** for morpheme recomposition
+- **Optional Groq śloka analysis** with translation, gloss, and explanation
+- **Optional translation** to English and Indian languages via Google
 
-## How it Works
+## Quick start
 
-1. **Tokenization**: Breaks down input text into individual words/tokens
-2. **Sandhi Analysis**: Identifies and splits compound words formed by sandhi rules
-3. **POS Tagging**: Assigns grammatical tags to each word
-4. **Confidence Scoring**: Provides confidence scores for all predictions
+```bash
+cd /Users/himanshukumar/Downloads/sanskrit-pos-tagger-fixed
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Usage
+### Local Gradio UI
 
-Simply enter Sanskrit text in Devanagari script and click "Analyze Text" to see:
-- Part-of-Speech tags for each word
-- Sandhi splitting operations
-- Overall confidence scores
+```bash
+python app.py
+```
 
-## Models
+### Local Flask UI
 
-The app uses pre-trained models:
-- CRF POS Tagger (`enhanced_crf_pos_model_v3.pkl`)
-- BiLSTM Sandhi Splitter (`bilstm_sandhi.pt`)
+```bash
+python simple_app.py
+```
 
-## Examples
+### Recommended Python version
 
-Try these sample Sanskrit sentences:
-- रामः सीतां पश्यति (Rama sees Sita)
-- अहं गच्छामि (I go)
-- देवाः पुण्यं ददति (Gods give merit)
-- विद्या विनयेन शोभते (Knowledge shines with humility)
+Use **Python 3.12** for best compatibility with the current Gradio/Pydub environment.
 
-## Technical Details
+## Configuration
 
-Built with:
-- Python 3.8+
-- Gradio for the web interface
-- PyTorch for neural networks
-- scikit-learn for CRF implementation
-- Custom Sanskrit tokenization and processing
+Create a `.env` file in the project root for secret settings.
+
+Example `.env`:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+SANSKRIT_MODEL_PRESET=default
+```
+
+Supported environment variables:
+
+- `GROQ_API_KEY` — enables Groq śloka analysis
+- `SANSKRIT_MODEL_PRESET` — `default` or `processed`
+- `POS_MODEL_PATH` — override the CRF model checkpoint
+- `SANDHI_BILSTM_PATH` — override the BiLSTM model checkpoint
+- `SANDHI_VOCAB_PATH` — override the sandhi vocab JSON path
+
+## Model bundles
+
+`src/model_presets.py` supports two bundles:
+
+| Preset | POS model | Sandhi BiLSTM | Notes |
+|--------|-----------|---------------|--------|
+| `default` | `models/enhanced_crf_pos_model_v3.pkl` | `models/bilstm_sandhi.pt` | Uses `models/sandhi_vocab.json` |
+| `processed` | `models/processed_data/crf_pos_from_processed.pkl` | `models/processed_data/bilstm_sandhi_from_processed.pt` | Uses processed data models |
+
+Activate the processed bundle:
+
+```bash
+export SANSKRIT_MODEL_PRESET=processed
+```
+
+Train processed models with:
+
+```bash
+python scripts/train_processed_crf_pos.py
+python scripts/train_processed_bilstm_sandhi.py
+```
+
+## Project layout
+
+```text
+sanskrit-pos-tagger-fixed/
+├── app.py
+├── simple_app.py
+├── requirements.txt
+├── README.md
+├── templates/
+│   └── index.html
+├── src/
+│   ├── integrated_sanskrit_processor.py
+│   ├── tokenizer.py
+│   ├── hybrid_sandhi_splitter.py
+│   ├── crf_pos_tagger.py
+│   ├── bilstm_sandhi.py
+│   ├── groq_service.py
+│   ├── model_presets.py
+│   └── train_bilstm_sandhi.py
+├── models/
+│   ├── enhanced_crf_pos_model_v3.pkl
+│   ├── bilstm_sandhi.pt
+│   ├── sandhi_vocab.json
+│   └── processed_data/
+├── processed_data/
+└── scripts/
+```
+
+## Deployment
+
+### Hugging Face Spaces
+
+This repository is configured for Hugging Face Spaces using `app.py`.
+
+- Keep `requirements.txt` at the repo root
+- Use `python_version: "3.12"`
+- Add `GROQ_API_KEY` under Space **Settings → Secrets**
+
+### Local deployment
+
+- Flask app: open `http://localhost:8085`
+- Gradio app: follow the URL printed in terminal
+
+## Notes
+
+- Sandhi splitting is a hybrid system: BiLSTM predictions plus rule-based correction.
+- POS tagging is performed after sandhi splitting, so poor splits can affect tag quality.
+- External services like Groq and Google Translate require network access and may incur rate limits.
 
 ## License
 
